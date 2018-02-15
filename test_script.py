@@ -8,22 +8,71 @@ import scipy.optimize as op
 import emcee
 sfs = AD.scale_factors()
 zs = 1./sfs - 1
+x = sfs - 0.5
 
-name = 'all'
+name = 'model8'
 
-def model_swap(params, name, xi=None):
+def start(name, xi=None):
     y = np.log10(200)
     a1,a2 = 1+.24*y*np.exp(-(4/y)**4), 0.44*y-0.88
     b1,b2 = 0.183, 1.5
     c1,c2 = 0.019+0.107*y+0.19*np.exp(-(4/y)**4), 2.4
     if name == 'all':
+        return np.array([a1,a2,b1,b2,c1,c2])
+    if name == 'model1':
+        return np.array([a1,a2,b1,b2,c1])
+    if name == 'model2':
+        return np.array([a1,a2,b1,b2,c2])
+    if name == 'model3':
+        return np.array([a1,a2,b2,c1])
+    if name == 'model4':
+        return np.array([a2,b2,c1])
+    if name == 'model5': #BAD MODEL
+        return np.array([a2,b2,c2])
+    if name == 'model6':
+        return np.array([0.9,-3.37]) #Good start for a2, c1
+    if name == 'model7':
+        return np.array([0.9,-3.37, 2.4]) #Good start for a2, c1, c2
+    if name == 'model8':
+        return np.array([0.9,0.0,-3.37, 2.4]) #Good start for a2_0, a2_1, c1, c2
+
+def model_swap(params, name, args, xi=None):
+    y = np.log10(200)
+    a1,a2 = 1+.24*y*np.exp(-(4/y)**4), 0.44*y-0.88
+    b1,b2 = 0.183, 1.5
+    c1 = 0.019+0.107*y+0.19*np.exp(-(4/y)**4)
+    c2 = 2.4
+    if name == 'all':
         a1,a2,b1,b2,c1,c2 = params
+    if name == 'model1':
+        a1,a2,b1,b2,c1 = params
+    if name == 'model2':
+        a1,a2,b1,b2,c2 = params
+    if name == 'model3':
+        b1 = 4.0
+        a1,a2,b2,c1 = params
+    if name == 'model4':
+        a1,b1 = 1.6, 4.0
+        a2,b2,c1 = params
+    if name == 'model5': #BAD MODEL
+        a1,b1 = 1.6, 4.0
+        a2,b2,c2 = params
+    if name == 'model6':
+        a1,b1,b2 = 1.6, 4.0, 2.33852598
+        a2,c1 = params
+    if name == 'model7':
+        a1,b1,b2 = 1.6, 4.0, 2.33852598
+        a2,c1,c2 = params
+    if name == 'model8':
+        a1,b1,b2 = 1.6, 4.0, 2.33852598
+        a2_0,a2_1,c1,c2 = params
+        a2 = a2_0 + args['x'][xi]*a2_1
     return a1,a2,b1,b2,c1,c2
 
 def lnprior(params, args):
-    a1,a2,b1,b2,c1,c2 = model_swap(params, args['name'])
-    if a1 > 10 or c2 > 10:
-        return -np.inf
+    a1,a2,b1,b2,c1,c2 = model_swap(params, args['name'], args, 0)
+    #if np.fabs(a1) > 10 or np.fabs(c2) > 10:
+    #    return -np.inf
     return 0
 
 def lnlike(params, args):
@@ -32,7 +81,7 @@ def lnlike(params, args):
     icovs = args['icovs']
     LL = 0
     for i in range(len(nus)):
-        a1,a2,b1,b2,c1,c2 = model_swap(params, args['name'])
+        a1,a2,b1,b2,c1,c2 = model_swap(params, args['name'], args, i)
         b_model = bias._bias_at_nu_FREEPARAMS(nus[i],a1,a2,b1,b2,c1,c2)
         X = biases[i] - b_model
         LL += np.dot(X, np.dot(icovs[i], X))
@@ -75,15 +124,10 @@ def get_args(i):
         nus.append(ct.bias.nu_at_M(M, kh, p, Omega_m))
         cov = np.diag(be**2)
         icovs.append(np.linalg.inv(cov))
-    return {'nus':nus, 'biases':bs, 'icovs':icovs, 'berrs':bes, 'Ms':Ms, 'name':name}
+    return {'nus':nus, 'biases':bs, 'icovs':icovs, 'berrs':bes, 'Ms':Ms, 'name':name, 'x':x}
 
 def run_bf(args, bfpath):
-    if name == 'all':
-        y = np.log10(200)
-        a1,a2 = 1+.24*y*np.exp(-(4/y)**4), 0.44*y-0.88
-        b1,b2 = 0.183, 1.5
-        c1,c2 = 0.019+0.107*y+0.19*np.exp(-(4/y)**4), 2.4
-        guess = np.array([a1,a2,b1,b2,c1,c2])
+    guess = start(args['name'])
     print "Test lnprob() call = %.2e"%lnprob(guess, args)
     nll = lambda *args:-lnprob(*args)
     result = op.minimize(nll, guess, args=args)
@@ -91,7 +135,7 @@ def run_bf(args, bfpath):
     np.savetxt(bfpath, result.x)
     print "BF saved at \n\t%s"%bfpath
 
-def plot_bf(i, args, bfpath):
+def plot_bf(i, args, bfpath, show=False):
     cosmo, h, Omega_m = get_cosmo(i)
     params = np.loadtxt(bfpath)
     print i, params
@@ -103,7 +147,7 @@ def plot_bf(i, args, bfpath):
         b = args['biases'][j]
         be = args['berrs'][j]
         nu = args['nus'][j]
-        a1,a2,b1,b2,c1,c2 = model_swap(params, args['name'])
+        a1,a2,b1,b2,c1,c2 = model_swap(params, args['name'], args, j)
         bmodel = bias._bias_at_nu_FREEPARAMS(nu,a1,a2,b1,b2,c1,c2)
         ax[0].errorbar(M, b, be, c=colors[j], marker='.', ls='',label=r"$z=%.2f$"%z)
         ax[0].loglog(M, bmodel, ls='-', c=colors[j])
@@ -122,14 +166,15 @@ def plot_bf(i, args, bfpath):
     ax[0].set_yscale('linear')
     plt.subplots_adjust(hspace=0, bottom=0.15, left=0.15)
     fig.savefig("figs/bias_fit_box%d.png"%i)
-    #plt.show()
+    if show:
+        plt.show()
     plt.clf()
 
 def run_mcmc(args, bfpath, mcmcpath, likespath):
     bf = np.loadtxt(bfpath)
     ndim = len(bf)
     nwalkers = 48
-    nsteps = 50000
+    nsteps = 1000
     pos = [bf + 1e-3*np.random.randn(ndim) for k in range(nwalkers)]
     sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, args=(args,), threads=4)
     print "Running MCMC for model:\n\t%s"%(args['name'])
@@ -143,13 +188,13 @@ def run_mcmc(args, bfpath, mcmcpath, likespath):
 
     
 if __name__ == "__main__":
-    lo = 0
-    hi = 1
+    lo = 10
+    hi = 11
     for i in range(lo, hi):
         args = get_args(i)
         bfpath = "bfs/bf_%s_box%d_bias.txt"%(args['name'], i)
         mcmcpath = "mcmcs/mcmc_%s_box%d_bias.txt"%(args['name'], i)
         likespath = "mcmcs/likes_%s_box%d_bias.txt"%(args['name'], i)
-        #run_bf(args, bfpath)
-        #plot_bf(i, args, bfpath)
+        run_bf(args, bfpath)
+        plot_bf(i, args, bfpath, show=True)
         run_mcmc(args, bfpath, mcmcpath, likespath)
