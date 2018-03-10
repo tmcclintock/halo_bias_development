@@ -10,7 +10,7 @@ sfs = AD.scale_factors()
 zs = 1./sfs - 1
 x = sfs - 0.5
 
-model_number = 12
+model_number = 14
 name = 'model%d'%model_number
 
 def start(name, xi=None):
@@ -247,8 +247,8 @@ if __name__ == "__main__":
         likespath = "mcmcs/likes_%s_box%d_bias.txt"%(args['name'], i)
         ll += run_bf(args, bfpath)
         if np.isnan(ll):
-            print "Failuer on box %d"%i
+            print "Failure on box %d"%i
             exit()
-        plot_bf(i, args, bfpath, show=True*0)
-        #run_mcmc(args, bfpath, mcmcpath, likespath)
+        #plot_bf(i, args, bfpath, show=True*0)
+        run_mcmc(args, bfpath, mcmcpath, likespath)
     print "%s LL total = %e"%(args['name'], ll)
