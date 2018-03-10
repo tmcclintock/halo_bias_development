@@ -10,7 +10,8 @@ sfs = AD.scale_factors()
 zs = 1./sfs - 1
 x = sfs - 0.5
 
-name = 'model8'
+model_number = 12
+name = 'model%d'%model_number
 
 def start(name, xi=None):
     y = np.log10(200)
@@ -35,6 +36,18 @@ def start(name, xi=None):
         return np.array([0.9,-3.37, 2.4]) #Good start for a2, c1, c2
     if name == 'model8':
         return np.array([0.9,0.0,-3.37, 2.4]) #Good start for a2_0, a2_1, c1, c2
+    if name == 'model9':
+        return np.array([0.9,0.0, 4.0, 0.0,-3.37, 2.4]) #a2_0, a2_1, b1_0, b1_1, c1, c2
+    if name == 'model10':
+        return np.array([0.9,0.0, 4.0, 0.0, 2.4]) #a2_0, a2_1, b1_0, b1_1, c2 #FAILS
+    if name == 'model11':
+        return np.array([0.9,0.0, 4.0, 0.0, 2.4, 0.0]) #a2_0, a2_1, b1_0, b1_1, c2_0, c2_1 #FAILS
+    if name == 'model12':
+        return np.array([0.9,0.0, 4.0, 0.0,-3.37, 0]) #a2_0, a2_1, b1_0, b1_1, c1_0, c1_1
+    if name == 'model13':
+        return np.array([0.9,0.0, 4.0, 0.0, -1.0]) #a2_0, a2_1, b1_0, b1_1, c1_1
+    if name == 'model14':
+        return np.array([0.9,0.0, 4.0, -1.0]) #a2_0, a2_1, b1_0, c1_1
 
 def model_swap(params, name, args, xi=None):
     y = np.log10(200)
@@ -67,7 +80,42 @@ def model_swap(params, name, args, xi=None):
         a1,b1,b2 = 1.6, 4.0, 2.33852598
         a2_0,a2_1,c1,c2 = params
         a2 = a2_0 + args['x'][xi]*a2_1
+    if name == 'model9':
+        a1, b2 = 1.6, 2.33852598
+        a2_0,a2_1,b1_0,b1_1,c1,c2 = params
+        a2 = a2_0 + args['x'][xi]*a2_1
+        b1 = b1_0 + args['x'][xi]*b1_1
+    if name == 'model10':
+        a1, b2, c1 = 1.6, 2.33852598, -0.505
+        a2_0,a2_1,b1_0,b1_1,c2 = params
+        a2 = a2_0 + args['x'][xi]*a2_1
+        b1 = b1_0 + args['x'][xi]*b1_1
+    if name == 'model11':
+        a1, b2, c1 = 1.6, 2.33852598, -0.505
+        a2_0,a2_1,b1_0,b1_1,c2_0,c2_1 = params
+        a2 = a2_0 + args['x'][xi]*a2_1
+        b1 = b1_0 + args['x'][xi]*b1_1
+        c2 = c2_0 + args['x'][xi]*c2_1
+    if name == 'model12':
+        a1, b2, c2 = 1.6, 2.33852598, 2.38569171
+        a2_0,a2_1,b1_0,b1_1,c1_0,c1_1 = params
+        a2 = a2_0 + args['x'][xi]*a2_1
+        b1 = b1_0 + args['x'][xi]*b1_1
+        c1 = c1_0 + args['x'][xi]*c1_1
+    if name == 'model13':
+        a1, b2, c1_0, c2 = 1.6, 2.33852598, -4.2, 2.38569171
+        a2_0,a2_1,b1_0,b1_1,c1_1 = params
+        a2 = a2_0 + args['x'][xi]*a2_1
+        b1 = b1_0 + args['x'][xi]*b1_1
+        c1 = c1_0 + args['x'][xi]*c1_1    
+    if name == 'model14':
+        a1, b1_1, b2, c1_0, c2 = 1.6, 1.2, 2.33852598, -4.2, 2.38569171
+        a2_0,a2_1,b1_0,c1_1 = params
+        a2 = a2_0 + args['x'][xi]*a2_1
+        b1 = b1_0 + args['x'][xi]*b1_1
+        c1 = c1_0 + args['x'][xi]*c1_1    
     return a1,a2,b1,b2,c1,c2
+
 
 def lnprior(params, args):
     a1,a2,b1,b2,c1,c2 = model_swap(params, args['name'], args, 0)
@@ -134,6 +182,7 @@ def run_bf(args, bfpath):
     print result
     np.savetxt(bfpath, result.x)
     print "BF saved at \n\t%s"%bfpath
+    return result.fun
 
 def plot_bf(i, args, bfpath, show=False):
     cosmo, h, Omega_m = get_cosmo(i)
@@ -165,7 +214,7 @@ def plot_bf(i, args, bfpath, show=False):
     ax[0].set_ylabel(r"$b(M)$")
     ax[0].set_yscale('linear')
     plt.subplots_adjust(hspace=0, bottom=0.15, left=0.15)
-    fig.savefig("figs/bias_fit_box%d.png"%i)
+    fig.savefig("figs/bias_fit_box%d_model%d.png"%(i,model_number))
     if show:
         plt.show()
     plt.clf()
@@ -188,13 +237,18 @@ def run_mcmc(args, bfpath, mcmcpath, likespath):
 
     
 if __name__ == "__main__":
-    lo = 10
-    hi = 11
+    lo = 0
+    hi = 40
+    ll = 0
     for i in range(lo, hi):
         args = get_args(i)
         bfpath = "bfs/bf_%s_box%d_bias.txt"%(args['name'], i)
         mcmcpath = "mcmcs/mcmc_%s_box%d_bias.txt"%(args['name'], i)
         likespath = "mcmcs/likes_%s_box%d_bias.txt"%(args['name'], i)
-        run_bf(args, bfpath)
-        plot_bf(i, args, bfpath, show=True)
-        run_mcmc(args, bfpath, mcmcpath, likespath)
+        ll += run_bf(args, bfpath)
+        if np.isnan(ll):
+            print "Failuer on box %d"%i
+            exit()
+        plot_bf(i, args, bfpath, show=True*0)
+        #run_mcmc(args, bfpath, mcmcpath, likespath)
+    print "%s LL total = %e"%(args['name'], ll)

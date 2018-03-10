@@ -1,8 +1,10 @@
 import numpy as np
 import corner
 import matplotlib.pyplot as plt
+import sys
+box = int(sys.argv[1])
 
-name = "model8"
+name = "model%d"%(int(sys.argv[2]))
 
 path = "mcmcs/mcmc_"+name+"_box%d_bias.txt"
 
@@ -15,6 +17,4 @@ def make_corner(box):
     #plt.show()
 
 if __name__ == "__main__":
-    import sys
-    box = int(sys.argv[1])
     make_corner(box)
