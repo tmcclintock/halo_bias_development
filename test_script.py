@@ -223,7 +223,7 @@ def run_mcmc(args, bfpath, mcmcpath, likespath):
     bf = np.loadtxt(bfpath)
     ndim = len(bf)
     nwalkers = 48
-    nsteps = 1000
+    nsteps = 4000
     pos = [bf + 1e-3*np.random.randn(ndim) for k in range(nwalkers)]
     sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, args=(args,), threads=4)
     print "Running MCMC for model:\n\t%s"%(args['name'])
