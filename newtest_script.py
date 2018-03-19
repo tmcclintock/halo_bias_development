@@ -10,126 +10,38 @@ sfs = AD.scale_factors()
 zs = 1./sfs - 1
 x = sfs - 0.5
 
-model_number = 14
-name = 'model%d'%model_number
-
-def start(name, xi=None):
-    y = np.log10(200)
-    a1,a2 = 1+.24*y*np.exp(-(4/y)**4), 0.44*y-0.88
-    b1,b2 = 0.183, 1.5
-    c1,c2 = 0.019+0.107*y+0.19*np.exp(-(4/y)**4), 2.4
-    if name == 'all':
-        return np.array([a1,a2,b1,b2,c1,c2])
-    if name == 'model1':
-        return np.array([a1,a2,b1,b2,c1])
-    if name == 'model2':
-        return np.array([a1,a2,b1,b2,c2])
-    if name == 'model3':
-        return np.array([a1,a2,b2,c1])
-    if name == 'model4':
-        return np.array([a2,b2,c1])
-    if name == 'model5': #BAD MODEL
-        return np.array([a2,b2,c2])
-    if name == 'model6':
-        return np.array([0.9,-3.37]) #Good start for a2, c1
-    if name == 'model7':
-        return np.array([0.9,-3.37, 2.4]) #Good start for a2, c1, c2
-    if name == 'model8':
-        return np.array([0.9,0.0,-3.37, 2.4]) #Good start for a2_0, a2_1, c1, c2
-    if name == 'model9':
-        return np.array([0.9,0.0, 4.0, 0.0,-3.37, 2.4]) #a2_0, a2_1, b1_0, b1_1, c1, c2
-    if name == 'model10':
-        return np.array([0.9,0.0, 4.0, 0.0, 2.4]) #a2_0, a2_1, b1_0, b1_1, c2 #FAILS
-    if name == 'model11':
-        return np.array([0.9,0.0, 4.0, 0.0, 2.4, 0.0]) #a2_0, a2_1, b1_0, b1_1, c2_0, c2_1 #FAILS
-    if name == 'model12':
-        return np.array([0.9,0.0, 4.0, 0.0,-3.37, 0]) #a2_0, a2_1, b1_0, b1_1, c1_0, c1_1
-    if name == 'model13':
-        return np.array([0.9,0.0, 4.0, 0.0, -1.0]) #a2_0, a2_1, b1_0, b1_1, c1_1
-    if name == 'model14':
-        return np.array([0.9,0.0, 4.0, -1.0]) #a2_0, a2_1, b1_0, c1_1
-
-def model_swap(params, name, args, xi=None):
+def model_swap(params, args, xi):
     y = np.log10(200)
     a1,a2 = 1+.24*y*np.exp(-(4/y)**4), 0.44*y-0.88
     b1,b2 = 0.183, 1.5
     c1 = 0.019+0.107*y+0.19*np.exp(-(4/y)**4)
     c2 = 2.4
-    if name == 'all':
-        a1,a2,b1,b2,c1,c2 = params
-    if name == 'model1':
-        a1,a2,b1,b2,c1 = params
-    if name == 'model2':
-        a1,a2,b1,b2,c2 = params
-    if name == 'model3':
-        b1 = 4.0
-        a1,a2,b2,c1 = params
-    if name == 'model4':
-        a1,b1 = 1.6, 4.0
-        a2,b2,c1 = params
-    if name == 'model5': #BAD MODEL
-        a1,b1 = 1.6, 4.0
-        a2,b2,c2 = params
-    if name == 'model6':
-        a1,b1,b2 = 1.6, 4.0, 2.33852598
-        a2,c1 = params
-    if name == 'model7':
-        a1,b1,b2 = 1.6, 4.0, 2.33852598
-        a2,c1,c2 = params
-    if name == 'model8':
-        a1,b1,b2 = 1.6, 4.0, 2.33852598
-        a2_0,a2_1,c1,c2 = params
-        a2 = a2_0 + args['x'][xi]*a2_1
-    if name == 'model9':
-        a1, b2 = 1.6, 2.33852598
-        a2_0,a2_1,b1_0,b1_1,c1,c2 = params
-        a2 = a2_0 + args['x'][xi]*a2_1
-        b1 = b1_0 + args['x'][xi]*b1_1
-    if name == 'model10':
-        a1, b2, c1 = 1.6, 2.33852598, -0.505
-        a2_0,a2_1,b1_0,b1_1,c2 = params
-        a2 = a2_0 + args['x'][xi]*a2_1
-        b1 = b1_0 + args['x'][xi]*b1_1
-    if name == 'model11':
-        a1, b2, c1 = 1.6, 2.33852598, -0.505
-        a2_0,a2_1,b1_0,b1_1,c2_0,c2_1 = params
-        a2 = a2_0 + args['x'][xi]*a2_1
-        b1 = b1_0 + args['x'][xi]*b1_1
-        c2 = c2_0 + args['x'][xi]*c2_1
-    if name == 'model12':
-        a1, b2, c2 = 1.6, 2.33852598, 2.38569171
-        a2_0,a2_1,b1_0,b1_1,c1_0,c1_1 = params
-        a2 = a2_0 + args['x'][xi]*a2_1
-        b1 = b1_0 + args['x'][xi]*b1_1
-        c1 = c1_0 + args['x'][xi]*c1_1
-    if name == 'model13':
-        a1, b2, c1_0, c2 = 1.6, 2.33852598, -4.2, 2.38569171
-        a2_0,a2_1,b1_0,b1_1,c1_1 = params
-        a2 = a2_0 + args['x'][xi]*a2_1
-        b1 = b1_0 + args['x'][xi]*b1_1
-        c1 = c1_0 + args['x'][xi]*c1_1    
-    if name == 'model14':
-        a1, b1_1, b2, c1_0, c2 = 1.6, 1.2, 2.33852598, -4.2, 2.38569171
-        a2_0,a2_1,b1_0,c1_1 = params
-        a2 = a2_0 + args['x'][xi]*a2_1
-        b1 = b1_0 + args['x'][xi]*b1_1
-        c1 = c1_0 + args['x'][xi]*c1_1    
+    dropped = args['dropped']
+    kept = args['kept']
+    pars = np.ones((8))
+    pars[kept] = params
+    if len(kept) != 12:
+        defaults = args['defaults']
+        pars[dropped] = defaults[dropped]
+    a1,a2,b1,b2,c1,c2 = pars[:6] + xi*pars[6:]
     return a1,a2,b1,b2,c1,c2
 
-
 def lnprior(params, args):
-    a1,a2,b1,b2,c1,c2 = model_swap(params, args['name'], args, 0)
-    #if np.fabs(a1) > 10 or np.fabs(c2) > 10:
-    #    return -np.inf
+    x = args['x']
+    for xi in x:
+        pars = np.array(model_swap(params, args, xi))
+        #if any(pars < 0) or any(pars > 5):
+        #    return -np.inf
     return 0
 
 def lnlike(params, args):
+    x = args['x'] # a - 0.5
     nus = args['nus']
     biases = args['biases']
     icovs = args['icovs']
     LL = 0
     for i in range(len(nus)):
-        a1,a2,b1,b2,c1,c2 = model_swap(params, args['name'], args, i)
+        a1,a2,b1,b2,c1,c2 = model_swap(params, args, x[i])
         b_model = bias._bias_at_nu_FREEPARAMS(nus[i],a1,a2,b1,b2,c1,c2)
         X = biases[i] - b_model
         LL += np.dot(X, np.dot(icovs[i], X))
@@ -175,6 +87,15 @@ def get_args(i):
     return {'nus':nus, 'biases':bs, 'icovs':icovs, 'berrs':bes, 'Ms':Ms, 'name':name, 'x':x}
 
 def run_bf(args, bfpath):
+    default_path = args['default_path']
+    bfpath = args['bfpath']
+    if os.path.isfile(default_path):
+        guess = np.loadtxt(default_path)
+    else:
+        guess = np.array([1.97,1.0,0.51,1.1228,0.01,0.01,0.01,0.01])
+    args['defaults'] = np.copy(guess)
+    guess = guess[args['kept']]
+
     guess = start(args['name'])
     print "Test lnprob() call = %.2e"%lnprob(guess, args)
     nll = lambda *args:-lnprob(*args)
