@@ -1,4 +1,6 @@
 # the intermediate results
+model_evals/*.txt
+oldfigs
 defaults/*.txt
 mcmcs/*.txt
 bfs/*.txt

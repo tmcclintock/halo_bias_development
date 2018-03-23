@@ -90,7 +90,7 @@ def run_bf(args, doprint=False):
     default_path = args['default_path']
     bfpath = args['bfpath']
     if os.path.isfile(default_path):
-        default = np.loadtxt(default_path)
+        defaults = np.loadtxt(default_path)
     else:
         y = np.log10(200)
         a1,a2 = 1+.24*y*np.exp(-(4/y)**4), 0.44*y-0.88
@@ -111,7 +111,7 @@ def run_bf(args, doprint=False):
         np.savetxt(default_path, result.x)
     return result.fun
 
-def plot_bf(i, args, bfpath, show=False):
+def plot_bf(i, args, bfpath, savepath=None):
     cosmo, h, Omega_m = get_cosmo(i)
     params = np.loadtxt(bfpath)
     print i, params
@@ -123,7 +123,7 @@ def plot_bf(i, args, bfpath, show=False):
         b = args['biases'][j]
         be = args['berrs'][j]
         nu = args['nus'][j]
-        a1,a2,b1,b2,c1,c2 = model_swap(params, args['name'], args, j)
+        a1,a2,b1,b2,c1,c2 = model_swap(params, args, args['x'][j])
         bmodel = bias._bias_at_nu_FREEPARAMS(nu,a1,a2,b1,b2,c1,c2)
         ax[0].errorbar(M, b, be, c=colors[j], marker='.', ls='',label=r"$z=%.2f$"%z)
         ax[0].loglog(M, bmodel, ls='-', c=colors[j])
@@ -141,8 +141,9 @@ def plot_bf(i, args, bfpath, show=False):
     ax[0].set_ylabel(r"$b(M)$")
     ax[0].set_yscale('linear')
     plt.subplots_adjust(hspace=0, bottom=0.15, left=0.15)
-    fig.savefig("figs/bias_fit_box%d_model%d.png"%(i,model_number), dpi=500)
-    if show:
+    if savepath:
+        plt.gcf().savefig(savepath)
+    else:
         plt.show()
     plt.clf()
 
@@ -165,18 +166,24 @@ def run_mcmc(args, bfpath, mcmcpath, likespath):
     
 if __name__ == "__main__":
     inds = np.arange(12)
-    nparams = [12]#,2]
+    nparams = [3]
     for i in range(len(nparams)):
         npars = nparams[i]
+        model_ll_path = "model_evals/bnp%d_loglikes.txt"%npars
         combos = itertools.combinations(inds, 12-npars)
+        lls = np.ones(len(list(combos)))*1e99
+        print "Starting analysis:\n\tNparams = %d\n\tNmodels = %d"%(npars, len(lls))
+        if os.path.isfile(model_ll_path):
+            lls = np.loadtxt(model_ll_path)
         model_index = -1
+        combos = itertools.combinations(inds, 12-npars)
         for combo in combos:
             model_index += 1
             if npars == 12:
                 if model_index > 0:
                     continue
             lo = 0
-            hi = lo+1
+            hi = 40#lo+1
             ll = 0 #log likelihood
             for box in range(lo, hi):
                 kept = np.delete(inds, combo)
@@ -189,7 +196,10 @@ if __name__ == "__main__":
                 args['bfpath'] = bfpath
                 mcmcpath = "chains/chain_%s_box%d.txt"%(args['name'], box)
                 likespath = "chains/likes_%s_box%d.txt"%(args['name'], box)
-                ll += run_bf(args, doprint=True)
-                #plot_bf(box, args, bfpath)#, "figs/bf_%s_box%d.png"%(args['name'],box))
+                ll += run_bf(args, doprint=True*0)
+                #plot_bf(box, args, bfpath, "figs/bf_%s_box%d.png"%(args['name'],box))
                 #run_mcmc(args, bfpath, mcmcpath, likespath)
             print "Np%d Mi%d:\tlnlike = %e"%(npars, model_index, ll)
+            lls[model_index] = ll
+            np.savetxt(model_ll_path,lls)
+            #exit()
