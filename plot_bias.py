@@ -1,6 +1,7 @@
 import numpy as np
 import aemulus_data as AD
 import matplotlib.pyplot as plt
+import vapeplot
 plt.rc("text", usetex=True)
 plt.rc("font", size=18, family='serif')
 from biasmodel import *
@@ -8,7 +9,8 @@ sfs = AD.scale_factors()
 zs = 1./sfs - 1
 
 def plot_blin(box, save=False):
-    cs = [plt.get_cmap("seismic")(ci) for ci in np.linspace(1,0,len(sfs))]
+    #cs = [plt.get_cmap("seismic")(ci) for ci in np.linspace(1,0,len(sfs))]
+    cs = [vapeplot.cmap("vaporwave")(ci) for ci in np.linspace(1,0,len(sfs))]
 
     cc = None
     fig, ax = plt.subplots(2, sharex=True)

@@ -5,7 +5,7 @@ from cluster_toolkit import bias
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.optimize as op
-import emcee
+import emcee, os, sys, itertools
 sfs = AD.scale_factors()
 zs = 1./sfs - 1
 x = sfs - 0.5
@@ -18,7 +18,7 @@ def model_swap(params, args, xi):
     c2 = 2.4
     dropped = args['dropped']
     kept = args['kept']
-    pars = np.ones((8))
+    pars = np.ones((12))
     pars[kept] = params
     if len(kept) != 12:
         defaults = args['defaults']
@@ -84,25 +84,31 @@ def get_args(i):
         nus.append(ct.bias.nu_at_M(M, kh, p, Omega_m))
         cov = np.diag(be**2)
         icovs.append(np.linalg.inv(cov))
-    return {'nus':nus, 'biases':bs, 'icovs':icovs, 'berrs':bes, 'Ms':Ms, 'name':name, 'x':x}
+    return {'nus':nus, 'biases':bs, 'icovs':icovs, 'berrs':bes, 'Ms':Ms, 'x':x}
 
-def run_bf(args, bfpath):
+def run_bf(args, doprint=False):
     default_path = args['default_path']
     bfpath = args['bfpath']
     if os.path.isfile(default_path):
-        guess = np.loadtxt(default_path)
+        default = np.loadtxt(default_path)
     else:
-        guess = np.array([1.97,1.0,0.51,1.1228,0.01,0.01,0.01,0.01])
-    args['defaults'] = np.copy(guess)
-    guess = guess[args['kept']]
-
-    guess = start(args['name'])
-    print "Test lnprob() call = %.2e"%lnprob(guess, args)
+        y = np.log10(200)
+        a1,a2 = 1+.24*y*np.exp(-(4/y)**4), 0.44*y-0.88
+        b1,b2 = 0.183, 1.5
+        c1,c2 = 0.019+0.107*y+0.19*np.exp(-(4/y)**4), 2.4
+        defaults = np.array([a1,a2,b1,b2,c1,c2,1e-2,1e-2,1e-2,1e-2,1e-2,1e-2])
+    args['defaults'] = np.copy(defaults)
+    guess = defaults[args['kept']]
+    if doprint:
+        print "Test lnprob() call = %.2e"%lnprob(guess, args)
     nll = lambda *args:-lnprob(*args)
     result = op.minimize(nll, guess, args=args)
-    print result
+    if doprint:
+        print result
+        print "BF saved at \n\t%s"%bfpath
     np.savetxt(bfpath, result.x)
-    print "BF saved at \n\t%s"%bfpath
+    if not os.path.isfile(default_path):
+        np.savetxt(default_path, result.x)
     return result.fun
 
 def plot_bf(i, args, bfpath, show=False):
@@ -144,7 +150,7 @@ def run_mcmc(args, bfpath, mcmcpath, likespath):
     bf = np.loadtxt(bfpath)
     ndim = len(bf)
     nwalkers = 48
-    nsteps = 4000
+    nsteps = 2000
     pos = [bf + 1e-3*np.random.randn(ndim) for k in range(nwalkers)]
     sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, args=(args,), threads=4)
     print "Running MCMC for model:\n\t%s"%(args['name'])
@@ -158,18 +164,32 @@ def run_mcmc(args, bfpath, mcmcpath, likespath):
 
     
 if __name__ == "__main__":
-    lo = 23
-    hi = 24
-    ll = 0
-    for i in range(lo, hi):
-        args = get_args(i)
-        bfpath = "bfs/bf_%s_box%d_bias.txt"%(args['name'], i)
-        mcmcpath = "mcmcs/mcmc_%s_box%d_bias.txt"%(args['name'], i)
-        likespath = "mcmcs/likes_%s_box%d_bias.txt"%(args['name'], i)
-        ll += run_bf(args, bfpath)
-        if np.isnan(ll):
-            print "Failure on box %d"%i
-            exit()
-        plot_bf(i, args, bfpath, show=True*0)
-        #run_mcmc(args, bfpath, mcmcpath, likespath)
-    print "%s LL total = %e"%(args['name'], ll)
+    inds = np.arange(12)
+    nparams = [12]#,2]
+    for i in range(len(nparams)):
+        npars = nparams[i]
+        combos = itertools.combinations(inds, 12-npars)
+        model_index = -1
+        for combo in combos:
+            model_index += 1
+            if npars == 12:
+                if model_index > 0:
+                    continue
+            lo = 0
+            hi = lo+1
+            ll = 0 #log likelihood
+            for box in range(lo, hi):
+                kept = np.delete(inds, combo)
+                args = get_args(box)
+                args['dropped'] = [ combo[k] for k in range(len(combo))]
+                args['kept'] = kept
+                args['name'] = "bnp%d_mi%d"%(npars,model_index)
+                args['default_path'] = "defaults/defaults_np8_mi0.txt"
+                bfpath = "bfs/bf_%s_box%d.txt"%(args['name'], box)
+                args['bfpath'] = bfpath
+                mcmcpath = "chains/chain_%s_box%d.txt"%(args['name'], box)
+                likespath = "chains/likes_%s_box%d.txt"%(args['name'], box)
+                ll += run_bf(args, doprint=True)
+                #plot_bf(box, args, bfpath)#, "figs/bf_%s_box%d.png"%(args['name'],box))
+                #run_mcmc(args, bfpath, mcmcpath, likespath)
+            print "Np%d Mi%d:\tlnlike = %e"%(npars, model_index, ll)

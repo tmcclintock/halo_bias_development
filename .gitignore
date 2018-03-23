@@ -1,4 +1,5 @@
 # the intermediate results
+defaults/*.txt
 mcmcs/*.txt
 bfs/*.txt
 
