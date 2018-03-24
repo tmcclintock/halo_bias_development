@@ -166,15 +166,17 @@ def run_mcmc(args, bfpath, mcmcpath, likespath):
     
 if __name__ == "__main__":
     inds = np.arange(12)
-    nparams = [3]
+    nparams = [4]
     for i in range(len(nparams)):
         npars = nparams[i]
         model_ll_path = "model_evals/bnp%d_loglikes.txt"%npars
         combos = itertools.combinations(inds, 12-npars)
         lls = np.ones(len(list(combos)))*1e99
+        startindex = 0
         print "Starting analysis:\n\tNparams = %d\n\tNmodels = %d"%(npars, len(lls))
         if os.path.isfile(model_ll_path):
             lls = np.loadtxt(model_ll_path)
+            startindex = np.argmax(lls)
         model_index = -1
         combos = itertools.combinations(inds, 12-npars)
         for combo in combos:
@@ -182,6 +184,9 @@ if __name__ == "__main__":
             if npars == 12:
                 if model_index > 0:
                     continue
+            if model_index < startindex:
+                continue
+            #print model_index, lls[model_index-1], lls[model_index]
             lo = 0
             hi = 40#lo+1
             ll = 0 #log likelihood
