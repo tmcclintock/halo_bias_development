@@ -113,7 +113,9 @@ def model_swap(params, name, args, xi=None):
         a2_0,a2_1,b1_0,c1_1 = params
         a2 = a2_0 + args['x'][xi]*a2_1
         b1 = b1_0 + args['x'][xi]*b1_1
-        c1 = c1_0 + args['x'][xi]*c1_1    
+        c1 = c1_0 + args['x'][xi]*c1_1
+        print a1, a2_0, a2_1, b1_0, b1_1, b2, c1_0, c1_1, c2
+        #exit()
     return a1,a2,b1,b2,c1,c2
 
 

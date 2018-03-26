@@ -97,6 +97,7 @@ def run_bf(args, doprint=False):
         b1,b2 = 0.183, 1.5
         c1,c2 = 0.019+0.107*y+0.19*np.exp(-(4/y)**4), 2.4
         defaults = np.array([a1,a2,b1,b2,c1,c2,1e-2,1e-2,1e-2,1e-2,1e-2,1e-2])
+        #defaults = np.array([1.6, 2.4584, 4.934, 2.339, -4.2, 2.385, 0.0, -3.014, 1.2, 0.0, -1.1172, 0.0]) #taken from model14 in test_script.py
     args['defaults'] = np.copy(defaults)
     guess = defaults[args['kept']]
     if doprint:
