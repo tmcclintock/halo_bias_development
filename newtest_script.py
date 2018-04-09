@@ -141,9 +141,11 @@ def plot_bf(i, args, bfpath, savepath=None):
     ax[1].set_ylabel(r"$(b_{\rm sim}-b_{\rm Fit})/b_{\rm Fit}$")
     ax[0].set_ylabel(r"$b(M)$")
     ax[0].set_yscale('linear')
+    ax[0].text(1e13, 4, "PRELIMINARY", color='r', fontsize=20, alpha=0.5)
+    ax[1].text(1e13, 0.02, "PRELIMINARY", color='r', fontsize=20, alpha=0.5)
     plt.subplots_adjust(hspace=0, bottom=0.15, left=0.15)
     if savepath:
-        plt.gcf().savefig(savepath)
+        plt.gcf().savefig(savepath, dpi=300, bbox_inches='tight')
     else:
         plt.show()
     plt.clf()
@@ -185,11 +187,13 @@ if __name__ == "__main__":
             if npars == 12:
                 if model_index > 0:
                     continue
-            if model_index < startindex:
+            #if model_index < startindex:
+            #    continue
+            if model_index != 159:
                 continue
             #print model_index, lls[model_index-1], lls[model_index]
             lo = 0
-            hi = 40#lo+1
+            hi = lo+1
             ll = 0 #log likelihood
             for box in range(lo, hi):
                 kept = np.delete(inds, combo)
@@ -203,9 +207,9 @@ if __name__ == "__main__":
                 mcmcpath = "chains/chain_%s_box%d.txt"%(args['name'], box)
                 likespath = "chains/likes_%s_box%d.txt"%(args['name'], box)
                 ll += run_bf(args, doprint=True*0)
-                #plot_bf(box, args, bfpath, "figs/bf_%s_box%d.png"%(args['name'],box))
+                plot_bf(box, args, bfpath, "figs/bf_%s_box%d.png"%(args['name'],box))
                 #run_mcmc(args, bfpath, mcmcpath, likespath)
             print "Np%d Mi%d:\tlnlike = %e"%(npars, model_index, ll)
             lls[model_index] = ll
-            np.savetxt(model_ll_path,lls)
-            #exit()
+            #np.savetxt(model_ll_path,lls)
+            exit()
