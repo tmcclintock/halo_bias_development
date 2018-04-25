@@ -4,6 +4,7 @@ oldfigs
 defaults/*.txt
 mcmcs/*.txt
 bfs/*.txt
+chains/*.txt
 
 # the figures
 **/*.png

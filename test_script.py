@@ -10,7 +10,7 @@ sfs = AD.scale_factors()
 zs = 1./sfs - 1
 x = sfs - 0.5
 
-model_number = 14
+model_number = 12
 name = 'model%d'%model_number
 
 def start(name, xi=None):
@@ -102,6 +102,7 @@ def model_swap(params, name, args, xi=None):
         a2 = a2_0 + args['x'][xi]*a2_1
         b1 = b1_0 + args['x'][xi]*b1_1
         c1 = c1_0 + args['x'][xi]*c1_1
+        #print a1, a2_0, b1_0, b2, c1_0, c2, 0.0, a2_1, b1_1, 0.0, c1_1, 0.0
     if name == 'model13':
         a1, b2, c1_0, c2 = 1.6, 2.33852598, -4.2, 2.38569171
         a2_0,a2_1,b1_0,b1_1,c1_1 = params
@@ -239,8 +240,8 @@ def run_mcmc(args, bfpath, mcmcpath, likespath):
 
     
 if __name__ == "__main__":
-    lo = 23
-    hi = 24
+    lo = 0
+    hi = 40
     ll = 0
     for i in range(lo, hi):
         args = get_args(i)
@@ -250,7 +251,7 @@ if __name__ == "__main__":
         ll += run_bf(args, bfpath)
         if np.isnan(ll):
             print "Failure on box %d"%i
-            exit()
-        plot_bf(i, args, bfpath, show=True*0)
+            #exit()
+        #plot_bf(i, args, bfpath, show=True*0)
         #run_mcmc(args, bfpath, mcmcpath, likespath)
     print "%s LL total = %e"%(args['name'], ll)
