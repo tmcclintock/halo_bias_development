@@ -141,8 +141,8 @@ def plot_bf(i, args, bfpath, savepath=None):
     ax[1].set_ylabel(r"$(b_{\rm sim}-b_{\rm Fit})/b_{\rm Fit}$")
     ax[0].set_ylabel(r"$b(M)$")
     ax[0].set_yscale('linear')
-    ax[0].text(1e13, 4, "PRELIMINARY", color='r', fontsize=20, alpha=0.5)
-    ax[1].text(1e13, 0.02, "PRELIMINARY", color='r', fontsize=20, alpha=0.5)
+    #ax[0].text(1e13, 4, "PRELIMINARY", color='r', fontsize=20, alpha=0.5)
+    #ax[1].text(1e13, 0.02, "PRELIMINARY", color='r', fontsize=20, alpha=0.5)
     plt.subplots_adjust(hspace=0, bottom=0.15, left=0.15)
     if savepath:
         plt.gcf().savefig(savepath, dpi=300, bbox_inches='tight')
@@ -169,7 +169,7 @@ def run_mcmc(args, bfpath, mcmcpath, likespath):
     
 if __name__ == "__main__":
     inds = np.arange(12)
-    nparams = [2,3,4,5,6,7,8,9]
+    nparams = [6]
     for i in range(len(nparams)):
         npars = nparams[i]
         model_ll_path = "model_evals/bnp%d_loglikes.txt"%npars
@@ -192,9 +192,11 @@ if __name__ == "__main__":
             #    continue
             if model_index != bestindex:
                 continue
-            print model_index, lls[model_index-1], lls[model_index]
+            else:
+                print "Working with the best model"
+            #print model_index, lls[model_index-1], lls[model_index]
             lo = 0
-            hi = lo+1
+            hi = 40#lo+1
             ll = 0 #log likelihood
             for box in range(lo, hi):
                 kept = np.delete(inds, combo)

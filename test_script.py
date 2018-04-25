@@ -252,6 +252,6 @@ if __name__ == "__main__":
         if np.isnan(ll):
             print "Failure on box %d"%i
             #exit()
-        #plot_bf(i, args, bfpath, show=True*0)
+        plot_bf(i, args, bfpath, show=True*0)
         #run_mcmc(args, bfpath, mcmcpath, likespath)
     print "%s LL total = %e"%(args['name'], ll)
