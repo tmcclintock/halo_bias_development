@@ -70,7 +70,11 @@ def get_args(i):
         tb = np.zeros_like(nu)
         for ind in range(len(tb)):
             tbi = quad(b_n_spl, lMbins[ind,0], lMbins[ind,1])
+            tbi2 = b_n_spl.integral(lMbins[ind,0], lMbins[ind,1])
+            print tbi[0]/n_bins[ind], tbi2/n_bins[ind]
             tb[ind] = tbi[0] / n_bins[ind]
+        print b
+        exit()
         #print tb
         #print ct.bias.bias_at_nu(nu) #instantaneous tinker bias
         #tb = ct.bias.bias_at_nu(nu) #instantaneous tinker bias
