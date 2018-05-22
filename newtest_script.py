@@ -165,7 +165,6 @@ def run_mcmc(args, bfpath, mcmcpath, likespath):
     np.savetxt(mcmcpath, chain)
     likes = sampler.flatlnprobability
     np.savetxt(likespath, likes)
-
     
 if __name__ == "__main__":
     inds = np.arange(12)

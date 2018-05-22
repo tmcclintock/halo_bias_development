@@ -3,6 +3,8 @@ from classy import Class
 import cluster_toolkit as ct
 from cluster_toolkit import bias
 import matplotlib.pyplot as plt
+plt.rc("text", usetex=True)
+plt.rc("font", size=18, family='serif')
 import numpy as np
 import scipy.optimize as op
 import emcee
@@ -201,23 +203,30 @@ def plot_bf(i, args, bfpath, show=False):
         nu = args['nus'][j]
         a1,a2,b1,b2,c1,c2 = model_swap(params, args['name'], args, j)
         bmodel = bias._bias_at_nu_FREEPARAMS(nu,a1,a2,b1,b2,c1,c2)
-        ax[0].errorbar(M, b, be, c=colors[j], marker='.', ls='',label=r"$z=%.2f$"%z)
+        if j in [0,1,6,9]:
+            label = r"$z=%.2f$"%z
+        else:
+            label = None
+        ax[0].errorbar(M, b, be, c=colors[j], marker='.', ls='',label=label)
         ax[0].loglog(M, bmodel, ls='-', c=colors[j])
         pd = (b-bmodel)/bmodel
         pde = be/bmodel
         ax[1].errorbar(M, pd, pde, c=colors[j])
     ax[1].axhline(0, c='k', ls='--', zorder=-1)
     xlim = ax[1].get_xlim()
-    ax[1].fill_between(xlim,-.01,.01, color='gray', alpha=0.4, zorder=-2)
+    #ax[1].fill_between(xlim,-.01,.01, color='gray', alpha=0.4, zorder=-2)
     ax[1].set_xlim(xlim)
     ax[0].set_xscale('log')
     ax[0].legend(frameon=False, loc="upper right", fontsize=8)
-    ax[1].set_xlabel(r"$M\ [{\rm M_\odot}/h]$")
-    ax[1].set_ylabel(r"$(b_{\rm sim}-b_{\rm Fit})/b_{\rm Fit}$")
+    ax[1].set_xlabel(r"$M\ [h^{-1}{\rm M_\odot}]$")
+    ax[1].set_ylabel(r"$(b_{\rm sim}-b_{\rm fit})/b_{\rm fit}$")
     ax[0].set_ylabel(r"$b(M)$")
     ax[0].set_yscale('linear')
+    yl = 0.2
+    ax[1].set_ylim(-yl, yl)
     plt.subplots_adjust(hspace=0, bottom=0.15, left=0.15)
-    fig.savefig("figs/bias_fit_box%d_model%d.png"%(i,model_number), dpi=500)
+    fig.savefig("figs/bias_fit_box%d_model%d.png"%(i,model_number), bbox_inches='tight', dpi=300)
+    fig.savefig("figs/bias_fit_box%d_model%d.pdf"%(i,model_number), bbox_inches='tight')
     if show:
         plt.show()
     plt.clf()
@@ -240,8 +249,8 @@ def run_mcmc(args, bfpath, mcmcpath, likespath):
 
     
 if __name__ == "__main__":
-    lo = 0
-    hi = 40
+    lo = 3
+    hi = 4
     ll = 0
     for i in range(lo, hi):
         args = get_args(i)
