@@ -5,7 +5,8 @@ from cluster_toolkit import bias
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.optimize as op
-import aemHMF
+import pickle
+#import aemHMF
 import emcee, os, sys, itertools
 from scipy.interpolate import InterpolatedUnivariateSpline as IUS
 from scipy.integrate import quad
@@ -70,6 +71,7 @@ def lnprob(params, args):
 def get_cosmo(i):
     obh2, och2, w, ns, ln10As, H0, Neff, s8 = AD.building_box_cosmologies()[i]
     aemcosmo={'Obh2':obh2, 'Och2':och2, 'w0':w, 'n_s':ns, 'ln10^{10}A_s':ln10As, 'N_eff':Neff, 'H0':H0}
+    import aemHMF
     hmf = aemHMF.Aemulus_HMF()
     hmf.set_cosmology(aemcosmo)
 
@@ -84,47 +86,55 @@ def get_cosmo(i):
     return cosmo, h, Omega_m, hmf
 
 def get_args(i):
-    Ms = []
-    bs = []
-    bes = []
-    icovs = []
-    cosmo, h, Omega_m, hmf = get_cosmo(i)
-    Marr = np.logspace(12.7, 16, 1000) #Msun/h for HMF
-    lMarr = np.log(Marr)
-    k = np.logspace(-5, 1, num=1000) #Mpc^-1
-    kh = k/h
-    nus = [] #sigma^2
-    nuarrs = []
-    n_bins = []
-    dndlms = []
-    lMbins = []
-    for j in range(0,10): #snap
-        z = zs[j]
-        M, Mlo, Mhigh, b, be = np.loadtxt("/Users/tmcclintock/Data/linear_bias/Box%03d_Z%d_DS50_linearbias.txt"%(i,j)).T
+    if os.path.isfile("./args/args_box%d.p"%i):
+        args = pickle.load(open("./args/args_box%d.p"%i, 'rb'))
+        print "Using saved args for box%d"%i
+        return args
+    else:
+        Ms = []
+        bs = []
+        bes = []
+        icovs = []
+        cosmo, h, Omega_m, hmf = get_cosmo(i)
+        Marr = np.logspace(12.7, 16, 1000) #Msun/h for HMF
+        lMarr = np.log(Marr)
+        k = np.logspace(-5, 1, num=1000) #Mpc^-1
+        kh = k/h
+        nus = [] #sigma^2
+        nuarrs = []
+        n_bins = []
+        dndlms = []
+        lMbins = []
+        for j in range(0,10): #snap
+            z = zs[j]
+            M, Mlo, Mhigh, b, be = np.loadtxt("/Users/tmcclintock/Data/linear_bias/Box%03d_Z%d_DS50_linearbias.txt"%(i,j)).T
 
-        Mlo = np.ascontiguousarray(Mlo)
-        Mhigh = np.ascontiguousarray(Mhigh)
-        inds = Mhigh > 1e99
-        Mhigh[inds] = 1e16
-        Mbins = np.array([Mlo, Mhigh]).T
-        lMbins.append(np.log(Mbins))
-        n_bin = hmf.n_in_bins(Mbins, z) #Denominator
-        n_bins.append(n_bin)
-        dndlm = hmf.dndlM(Marr, z)
-        dndlms.append(dndlm)
-
+            Mlo = np.ascontiguousarray(Mlo)
+            Mhigh = np.ascontiguousarray(Mhigh)
+            inds = Mhigh > 1e99
+            Mhigh[inds] = 1e16
+            Mbins = np.array([Mlo, Mhigh]).T
+            lMbins.append(np.log(Mbins))
+            n_bin = hmf.n_in_bins(Mbins, z) #Denominator
+            n_bins.append(n_bin)
+            dndlm = hmf.dndlM(Marr, z)
+            dndlms.append(dndlm)
+            
         
-        M = np.ascontiguousarray(M)
-        Ms.append(M)
-        bs.append(b)
-        bes.append(be)
-        p = np.array([cosmo.pk_lin(ki, z) for ki in k])*h**3
-        nuarr = ct.bias.nu_at_M(Marr, kh, p, Omega_m)
-        nuarrs.append(nuarr)
-        nus.append(ct.bias.nu_at_M(M, kh, p, Omega_m))
-        cov = np.diag(be**2)
-        icovs.append(np.linalg.inv(cov))
-    return {'nus':nus, 'biases':bs, 'icovs':icovs, 'berrs':bes, 'Ms':Ms, 'x':x, 'lMarr':lMarr, 'nuarrs':nuarrs, 'n_bins':n_bins, 'dndlMs':dndlms, 'lMbins':lMbins}
+            M = np.ascontiguousarray(M)
+            Ms.append(M)
+            bs.append(b)
+            bes.append(be)
+            p = np.array([cosmo.pk_lin(ki, z) for ki in k])*h**3
+            nuarr = ct.bias.nu_at_M(Marr, kh, p, Omega_m)
+            nuarrs.append(nuarr)
+            nus.append(ct.bias.nu_at_M(M, kh, p, Omega_m))
+            cov = np.diag(be**2)
+            icovs.append(np.linalg.inv(cov))
+        args = {'nus':nus, 'biases':bs, 'icovs':icovs, 'berrs':bes, 'Ms':Ms, 'x':x, 'lMarr':lMarr, 'nuarrs':nuarrs, 'n_bins':n_bins, 'dndlMs':dndlms, 'lMbins':lMbins}
+        pickle.dump(args, open("./args/args_box%d.p"%i, 'wb'))
+        print "Args for box%d pickled"%i
+        return args
 
 def run_bf(args, doprint=False):
     default_path = args['default_path']
@@ -246,7 +256,7 @@ if __name__ == "__main__":
                 print "Working with the best model"
             #print model_index, lls[model_index-1], lls[model_index]
             lo = 0
-            hi = lo+1
+            hi = 40#lo+1
             ll = 0 #log likelihood
             for box in range(lo, hi):
                 kept = np.delete(inds, combo)
@@ -260,7 +270,7 @@ if __name__ == "__main__":
                 mcmcpath = "chains/chain_%s_box%d.txt"%(args['name'], box)
                 likespath = "chains/likes_%s_box%d.txt"%(args['name'], box)
                 ll += run_bf(args, doprint=True*0)
-                plot_bf(box, args, bfpath, "figs/bf_%s_box%d.png"%(args['name'],box))
+                #plot_bf(box, args, bfpath, "figs/bf_%s_box%d.png"%(args['name'],box))
                 #run_mcmc(args, bfpath, mcmcpath, likespath)
             print "Np%d Mi%d:\tlnlike = %e"%(npars, model_index, ll)
             lls[model_index] = ll

@@ -1,0 +1,1 @@
+This directory contains the pickled args needed to fit the bias data. These are created so that in order to run the modeling code, one does not need to have all the dependencies required to create the arguments, such as the HMF emulator or CLASS.
