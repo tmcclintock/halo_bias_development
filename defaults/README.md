@@ -1,0 +1,1 @@
+This folder contains default parameter values for various model configurations.
