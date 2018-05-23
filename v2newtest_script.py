@@ -219,7 +219,7 @@ def run_mcmc(args, bfpath, mcmcpath, likespath):
     
 if __name__ == "__main__":
     inds = np.arange(12)
-    nparams = [5]
+    nparams = [4]
     for i in range(len(nparams)):
         npars = nparams[i]
         model_ll_path = "model_evals/bnp%d_loglikes.txt"%npars
