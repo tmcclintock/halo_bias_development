@@ -59,6 +59,7 @@ def lnlike(params, args):
         b_n = dndlMs[i] * bias._bias_at_nu_FREEPARAMS(nuarrs[i],a1,a2,b1,b2,c1,c2)
         b_n_spl = IUS(lMarr, b_n)
         b_model = np.array([quad(b_n_spl, lMbins[j,0], lMbins[j,1])[0]/nbin[j] for j in range(N)])
+        del b_n_spl
         X = biases[i] - b_model
         LL += np.dot(X, np.dot(icovs[i], X))
     return -0.5*LL
@@ -255,7 +256,7 @@ if __name__ == "__main__":
             else:
                 print "Working with the best model"
             #print model_index, lls[model_index-1], lls[model_index]
-            lo = 0
+            lo = 34
             hi = 40#lo+1
             ll = 0 #log likelihood
             for box in range(lo, hi):
@@ -271,7 +272,7 @@ if __name__ == "__main__":
                 likespath = "chains/likes_%s_box%d.txt"%(args['name'], box)
                 ll += run_bf(args, doprint=True*0)
                 #plot_bf(box, args, bfpath, "figs/bf_%s_box%d.png"%(args['name'],box))
-                #run_mcmc(args, bfpath, mcmcpath, likespath)
+                run_mcmc(args, bfpath, mcmcpath, likespath)
             print "Np%d Mi%d:\tlnlike = %e"%(npars, model_index, ll)
             lls[model_index] = ll
             #np.savetxt(model_ll_path,lls)
