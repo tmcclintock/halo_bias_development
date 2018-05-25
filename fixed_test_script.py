@@ -164,8 +164,8 @@ if __name__ == "__main__":
                 continue
             else:
                 print "Working with the best model at index%d"%bestindex
-            lo = 0
-            hi = 40#lo+1
+            lo = 35
+            hi = lo+1
             ll = 0 #log likelihood
             for box in range(lo, hi):
                 kept = np.delete(inds, combo)
@@ -187,7 +187,7 @@ if __name__ == "__main__":
                     b1,b2 = 0.183, 1.5
                     c1,c2 = 0.019+0.107*y+0.19*np.exp(-(4/y)**4), 2.4
                     args['defaults'] = np.array([1.6, 1.86, 6.05, 2.34, -5.28, 2.386, 0.0, -1.83, -0.703, 0.0, 0.725, 0.0])
-                ll += run_bf(args, doprint=True*0)
+                ll += run_bf(args, doprint=True)
                 #plot_bf(box, args, bfpath, "figs/bf_%s_box%d.png"%(args['name'],box))
                 #run_mcmc(args, bfpath, mcmcpath, likespath)
             print "Np%d Mi%d:\tlnlike = %e"%(npars, model_index, ll)
