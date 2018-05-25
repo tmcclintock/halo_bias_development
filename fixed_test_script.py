@@ -146,9 +146,9 @@ def run_mcmc(args, bfpath, mcmcpath, likespath):
     sampler.run_mcmc(pos, nsteps)
     print "Saving chain at:\n\t%s"%mcmcpath
     chain = sampler.flatchain
-    np.savetxt(mcmcpath, chain)
+    np.save(mcmcpath, chain)
     likes = sampler.flatlnprobability
-    np.savetxt(likespath, likes)
+    np.save(likespath, likes)
     return
     
 if __name__ == "__main__":
@@ -188,8 +188,8 @@ if __name__ == "__main__":
                 args['default_path'] = "defaults/defaults_np8_mi0.txt"
                 bfpath = "bfs/bf_%s_box%d.txt"%(args['name'], box)
                 args['bfpath'] = bfpath
-                mcmcpath = "chains/chain_%s_box%d.txt"%(args['name'], box)
-                likespath = "chains/likes_%s_box%d.txt"%(args['name'], box)
+                mcmcpath = "chains/chain_%s_box%d"%(args['name'], box)
+                likespath = "chains/likes_%s_box%d"%(args['name'], box)
                 if os.path.isfile(args['default_path']):
                     args['defaults'] = np.loadtxt(args['default_path'])
                     print "Using already-made defaults"
@@ -199,9 +199,9 @@ if __name__ == "__main__":
                     b1,b2 = 0.183, 1.5
                     c1,c2 = 0.019+0.107*y+0.19*np.exp(-(4/y)**4), 2.4
                     args['defaults'] = np.array([1.6, 1.86, 6.05, 2.34, -5.28, 2.386, 0.0, -1.83, -0.703, 0.0, 0.725, 0.0])
-                ll += run_bf(args, doprint=True)
-                plot_bf(box, args, bfpath)#, "figs/bf_%s_box%d.png"%(args['name'],box))
-                #run_mcmc(args, bfpath, mcmcpath, likespath)
+                #ll += run_bf(args, doprint=True)
+                #plot_bf(box, args, bfpath)#, "figs/bf_%s_box%d.png"%(args['name'],box))
+                run_mcmc(args, bfpath, mcmcpath, likespath)
             print "Np%d Mi%d:\tlnlike = %e"%(npars, model_index, ll)
             lls[model_index] = ll
             #np.savetxt(model_ll_path,lls)
