@@ -6,6 +6,7 @@ import pickle
 import emcee, os, sys, itertools
 from scipy.interpolate import InterpolatedUnivariateSpline as IUS
 from scipy.integrate import quad
+import matplotlib.pyplot as plt
 
 sfs = AD.scale_factors()
 zs = 1./sfs - 1
@@ -27,6 +28,8 @@ def model_swap(params, args, xi):
     return a1,a2,b1,b2,c1,c2
 
 def lnprior(params, args):
+    if any(np.fabs(params) > 10):
+        return -np.inf
     return 0
 
 def lnlike(params, args, return_model=False):
@@ -42,18 +45,27 @@ def lnlike(params, args, return_model=False):
     if return_model:
         models = []
     for i in range(len(x)):
+        dndlM = dndlMs[i]
         lMbins = lMbins_all[i]
         nbin = n_bins[i]
         N = len(biases[i])
         a1,a2,b1,b2,c1,c2 = model_swap(params, args, x[i])
-        inds = dndlMs[i] > 0 #Fixes the messed up numerical issue when computing dndlm
-        b_n = dndlMs[i] * bias._bias_at_nu_FREEPARAMS(nuarrs[i],a1,a2,b1,b2,c1,c2)
+        inds = (dndlM > 0) #Fixes the messed up numerical issue when computing dndlm
+        dn = dndlM[:-1] - dndlM[1:]
+        for j in range(len(inds)-1): #by hand fixes a numerical scatter UP
+            dn = dndlM[j] - dndlM[j+1]
+            if dn < 0:
+                inds[j+1] = False
+        b_n = dndlM * bias._bias_at_nu_FREEPARAMS(nuarrs[i],a1,a2,b1,b2,c1,c2)
+        #plt.loglog(lMarr[inds], dndlM[inds])
         b_n_spl = IUS(lMarr[inds], b_n[inds])
         b_model = np.array([quad(b_n_spl, lMbins[j,0], lMbins[j,1])[0]/nbin[j] for j in range(N)])
         if return_model:
             models.append(b_model)
         X = biases[i] - b_model
         LL += np.dot(X, np.dot(icovs[i], X))
+    #plt.show()
+    #exit()
     if return_model:
         return models
     return -0.5*LL
@@ -188,7 +200,7 @@ if __name__ == "__main__":
                     c1,c2 = 0.019+0.107*y+0.19*np.exp(-(4/y)**4), 2.4
                     args['defaults'] = np.array([1.6, 1.86, 6.05, 2.34, -5.28, 2.386, 0.0, -1.83, -0.703, 0.0, 0.725, 0.0])
                 ll += run_bf(args, doprint=True)
-                #plot_bf(box, args, bfpath, "figs/bf_%s_box%d.png"%(args['name'],box))
+                plot_bf(box, args, bfpath)#, "figs/bf_%s_box%d.png"%(args['name'],box))
                 #run_mcmc(args, bfpath, mcmcpath, likespath)
             print "Np%d Mi%d:\tlnlike = %e"%(npars, model_index, ll)
             lls[model_index] = ll
