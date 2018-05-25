@@ -176,7 +176,7 @@ if __name__ == "__main__":
                 continue
             else:
                 print "Working with the best model at index%d"%bestindex
-            lo = 35
+            lo = 23
             hi = lo+1
             ll = 0 #log likelihood
             for box in range(lo, hi):
