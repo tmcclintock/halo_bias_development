@@ -12,18 +12,18 @@ sfs = AD.scale_factors()
 zs = 1./sfs - 1
 x = sfs - 0.5
 
-def model_swap(params, args, xi):
+"""
     y = np.log10(200)
     a1,a2 = 1+.24*y*np.exp(-(4/y)**4), 0.44*y-0.88
     b1,b2 = 0.183, 1.5
     c1 = 0.019+0.107*y+0.19*np.exp(-(4/y)**4)
     c2 = 2.4
-    dropped = args['dropped']
-    kept = args['kept']
-    pars = np.ones((12))
-    pars[kept] = params
-    if len(kept) != 12:
-        pars[dropped] = args['defaults'][dropped]
+"""
+pars = np.ones((12))
+def model_swap(params, args, xi):
+    pars[args['kept']] = params
+    #if len(args['kept']) != 12:
+    pars[args['dropped']] = args['defaults'][args['dropped']]
     a1,a2,b1,b2,c1,c2 = pars[:6] + xi*pars[6:]
     return a1,a2,b1,b2,c1,c2
 
@@ -44,7 +44,7 @@ def lnlike(params, args, return_model=False):
     LL = 0
     if return_model:
         models = []
-    for i in range(len(x)):
+    for i in xrange(0,len(x)):
         dndlM = dndlMs[i]
         lMbins = lMbins_all[i]
         nbin = n_bins[i]
@@ -52,18 +52,19 @@ def lnlike(params, args, return_model=False):
         a1,a2,b1,b2,c1,c2 = model_swap(params, args, x[i])
         inds = (dndlM > 0) #Fixes the messed up numerical issue when computing dndlm
         dn = dndlM[:-1] - dndlM[1:]
-        for j in range(len(inds)-1): #by hand fixes a numerical scatter UP
+        for j in xrange(0,len(inds)-1): #by hand fixes a numerical scatter UP
             dn = dndlM[j] - dndlM[j+1]
             if dn < 0:
                 inds[j+1] = False
         b_n = dndlM * bias._bias_at_nu_FREEPARAMS(nuarrs[i],a1,a2,b1,b2,c1,c2)
         #plt.loglog(lMarr[inds], dndlM[inds])
         b_n_spl = IUS(lMarr[inds], b_n[inds])
-        b_model = np.array([quad(b_n_spl, lMbins[j,0], lMbins[j,1])[0]/nbin[j] for j in range(N)])
+        b_model = np.array([quad(b_n_spl, lMbins[j,0], lMbins[j,1])[0]/nbin[j] for j in xrange(0,N)])
         if return_model:
             models.append(b_model)
         X = biases[i] - b_model
         LL += np.dot(X, np.dot(icovs[i], X))
+        del b_n_spl
     #plt.show()
     #exit()
     if return_model:
@@ -176,13 +177,13 @@ if __name__ == "__main__":
                 continue
             else:
                 print "Working with the best model at index%d"%bestindex
-            lo = 23
+            lo = 35
             hi = lo+1
             ll = 0 #log likelihood
             for box in range(lo, hi):
                 kept = np.delete(inds, combo)
                 args = get_args(box)
-                args['dropped'] = [ combo[k] for k in range(len(combo))]
+                args['dropped'] = np.array([combo[k] for k in range(len(combo))])
                 args['kept'] = kept
                 args['name'] = "bnp%d_mi%d"%(npars,model_index)
                 args['default_path'] = "defaults/defaults_np8_mi0.txt"
@@ -199,9 +200,9 @@ if __name__ == "__main__":
                     b1,b2 = 0.183, 1.5
                     c1,c2 = 0.019+0.107*y+0.19*np.exp(-(4/y)**4), 2.4
                     args['defaults'] = np.array([1.6, 1.86, 6.05, 2.34, -5.28, 2.386, 0.0, -1.83, -0.703, 0.0, 0.725, 0.0])
-                #ll += run_bf(args, doprint=True)
-                #plot_bf(box, args, bfpath)#, "figs/bf_%s_box%d.png"%(args['name'],box))
-                run_mcmc(args, bfpath, mcmcpath, likespath)
+                ll += run_bf(args, doprint=True)
+                plot_bf(box, args, bfpath)#, "figs/bf_%s_box%d.png"%(args['name'],box))
+                #run_mcmc(args, bfpath, mcmcpath, likespath)
             print "Np%d Mi%d:\tlnlike = %e"%(npars, model_index, ll)
             lls[model_index] = ll
             #np.savetxt(model_ll_path,lls)
