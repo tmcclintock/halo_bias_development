@@ -1,3 +1,5 @@
+*.npy
+
 # the intermediate results
 model_evals/*.txt
 oldfigs

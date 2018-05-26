@@ -7,6 +7,9 @@ import emcee, os, sys, itertools
 from scipy.interpolate import InterpolatedUnivariateSpline as IUS
 from scipy.integrate import quad
 import matplotlib.pyplot as plt
+plt.rc("text", usetex=True)
+plt.rc('errorbar', capsize=3)
+plt.rc("font", size=14, family='serif')
 
 sfs = AD.scale_factors()
 zs = 1./sfs - 1
@@ -117,20 +120,22 @@ def plot_bf(i, args, bfpath, savepath=None):
         ax[0].loglog(M, bmodel, ls='-', c=colors[j])
         pd = (b-bmodel)/bmodel
         pde = be/bmodel
-        ax[1].errorbar(M, pd, pde, c=colors[j])
+        ax[1].errorbar(M, pd, pde, c=colors[j], marker='.')
     ax[1].axhline(0, c='k', ls='--', zorder=-1)
     xlim = ax[1].get_xlim()
     ax[1].fill_between(xlim,-.01,.01, color='gray', alpha=0.4, zorder=-2)
     ax[1].set_xlim(xlim)
     ax[0].set_xscale('log')
     ax[0].legend(frameon=False, loc="upper right", fontsize=8)
-    ax[1].set_xlabel(r"$M\ [{\rm M_\odot}/h]$")
-    ax[1].set_ylabel(r"$(b_{\rm sim}-b_{\rm Fit})/b_{\rm Fit}$")
+    ax[1].set_xlabel(r"$M\ [h^{-1} {\rm M_\odot}]$")
+    #ax[1].set_ylabel(r"$(b_{\rm sim}-b_{\rm Fit})/b_{\rm Fit}$")
+    ax[1].set_ylabel(r"$\Delta\ [\%]$")
     ax[0].set_ylabel(r"$b(M)$")
     ax[0].set_yscale('linear')
+    ax[1].set_ylim(-.1,.1)
     plt.subplots_adjust(hspace=0, bottom=0.15, left=0.15)
     if savepath:
-        plt.gcf().savefig(savepath, dpi=300, bbox_inches='tight')
+        plt.gcf().savefig(savepath, dpi=400, bbox_inches='tight')
     else:
         plt.show()
     plt.clf()
@@ -177,7 +182,7 @@ if __name__ == "__main__":
                 continue
             else:
                 print "Working with the best model at index%d"%bestindex
-            lo = 35
+            lo = 0
             hi = lo+1
             ll = 0 #log likelihood
             for box in range(lo, hi):
@@ -201,7 +206,7 @@ if __name__ == "__main__":
                     c1,c2 = 0.019+0.107*y+0.19*np.exp(-(4/y)**4), 2.4
                     args['defaults'] = np.array([1.6, 1.86, 6.05, 2.34, -5.28, 2.386, 0.0, -1.83, -0.703, 0.0, 0.725, 0.0])
                 ll += run_bf(args, doprint=True)
-                plot_bf(box, args, bfpath)#, "figs/bf_%s_box%d.png"%(args['name'],box))
+                plot_bf(box, args, bfpath, "figs/bf_%s_box%d.png"%(args['name'],box))
                 #run_mcmc(args, bfpath, mcmcpath, likespath)
             print "Np%d Mi%d:\tlnlike = %e"%(npars, model_index, ll)
             lls[model_index] = ll

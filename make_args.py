@@ -72,10 +72,12 @@ def make_args(i): #i is the box
         bs.append(b)
         bes.append(be)
         p = np.array([cosmo.pk_lin(ki, z) for ki in k])*h**3
-        nuarr = ct.bias.nu_at_M(Marr, kh, p, Omega_m)
+        nuarr = ct.peak_height.nu_at_M(Marr, kh, p, Omega_m)
         nuarrs.append(nuarr)
-        nus.append(ct.bias.nu_at_M(M, kh, p, Omega_m))
-        cov = np.diag(be**2)
+        nus.append(ct.peak_height.nu_at_M(M, kh, p, Omega_m))
+
+        cov = np.loadtxt("/Users/tmcclintock/Data/linear_bias/Box%03d_Z%d_DS50_linearbias_cov.txt"%(i,j))
+        #cov = np.diag(be**2)
         icovs.append(np.linalg.inv(cov))
     args = {'nus':nus, 'biases':bs, 'icovs':icovs, 'berrs':bes, 'Ms':Ms, 'x':x, 'lMarr':lMarr, 'nuarrs':nuarrs, 'n_bins':n_bins, 'dndlMs':dndlms, 'lMbins':lMbins}
     pickle.dump(args, open("./args/args_box%d.p"%i, 'wb'))
@@ -83,6 +85,7 @@ def make_args(i): #i is the box
     return
 
 if __name__=="__main__":
-    #List of messed up stuf: (8,2), (25,2), (28,0), (34,5), (35,1), 
-    for i in [8,25,28,34,35]:
+    #List of messed up stuf: (8,2), (25,2), (28,0), (34,5), (35,1),
+    for i in range(40):
+        #for i in [8,25,28,34,35]:
         make_args(i)
