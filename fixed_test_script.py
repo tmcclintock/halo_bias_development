@@ -26,6 +26,11 @@ pars = np.ones((12))
 def model_swap(params, args, xi):
     pars[args['kept']] = params
     #if len(args['kept']) != 12:
+    #print args['kept']
+    #print args['dropped']
+    #for p in args['defaults'][args['dropped']]:
+    #    print "%.3f"%p
+    #exit()
     pars[args['dropped']] = args['defaults'][args['dropped']]
     a1,a2,b1,b2,c1,c2 = pars[:6] + xi*pars[6:]
     return a1,a2,b1,b2,c1,c2
