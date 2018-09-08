@@ -85,5 +85,5 @@ def make_args(i): #i is the box
     return
 
 if __name__=="__main__":
-    for i in range(7):
+    for i in range(1):
         make_args(i)
