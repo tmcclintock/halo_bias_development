@@ -16,7 +16,8 @@ zs = 1./sfs - 1
 x = sfs - 0.5
 
 def get_cosmo(i):
-    obh2, och2, w, ns, ln10As, H0, Neff, s8= AD.test_box_cosmologies()[i]
+    remap = [0,2,4,1,3,5,6] #test boxes don't map 1 to 1 onto the med boxes
+    obh2, och2, w, ns, ln10As, H0, Neff, s8= AD.test_box_cosmologies()[remap[i]]
     aemcosmo={'Obh2':obh2, 'Och2':och2, 'w0':w, 'n_s':ns, 'ln10^{10}A_s':ln10As, 'N_eff':Neff, 'H0':H0}
     import aemHMF
     hmf = aemHMF.Aemulus_HMF()
@@ -49,7 +50,7 @@ def make_args(i): #i is the box
     lMbins = []
     for j in range(1,len(zs)): #snap
         z = zs[j]
-        M, Mlo, Mhigh, b, be = np.loadtxt("/Users/tmcclintock/Data/medbox_linear_bias/MedBox%03d_Z%d_DS50_linearbias.txt"%(i,j)).T
+        M, Mlo, Mhigh, b, be = np.loadtxt("/Users/tmcclintock/Data/medbox_linear_bias/MedBox%03d_bias/MedBox%03d_Z%d_DS50_linearbias.txt"%(i,i,j)).T
         
         Mlo = np.ascontiguousarray(Mlo)
         Mhigh = np.ascontiguousarray(Mhigh)
@@ -76,7 +77,7 @@ def make_args(i): #i is the box
         nuarrs.append(nuarr)
         nus.append(ct.peak_height.nu_at_M(M, kh, p, Omega_m))
 
-        cov = np.loadtxt("/Users/tmcclintock/Data/medbox_linear_bias/MedBox%03d_Z%d_DS50_linearbias_cov.txt"%(i,j))
+        cov = np.loadtxt("/Users/tmcclintock/Data/medbox_linear_bias/MedBox%03d_bias/MedBox%03d_Z%d_DS50_linearbias_cov.txt"%(i,i,j))
         #cov = np.diag(be**2)
         icovs.append(np.linalg.inv(cov))
     args = {'nus':nus, 'biases':bs, 'icovs':icovs, 'berrs':bes, 'Ms':Ms, 'x':x, 'lMarr':lMarr, 'nuarrs':nuarrs, 'n_bins':n_bins, 'dndlMs':dndlms, 'lMbins':lMbins}
@@ -85,5 +86,5 @@ def make_args(i): #i is the box
     return
 
 if __name__=="__main__":
-    for i in range(1):
+    for i in range(7):
         make_args(i)
