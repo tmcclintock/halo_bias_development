@@ -4,6 +4,15 @@ import numpy as np
 from likelihoods import *
 import swaps
 
+def get_args(i):
+    if os.path.isfile("./args/args_box%d.p"%i):
+        args = pickle.load(open("./args/args_box%d.p"%i, 'rb'))
+        print "Using saved args for box%d"%i
+        return args
+    else:
+        raise Exception("Must have args premade.")
+    return #won't ever reach this
+    
 def run_bf(args, bf_array, bf_path):
     box = args['box'] #which simulation we are looking at
     guess = swaps.initial_guess(args)
