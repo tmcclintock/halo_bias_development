@@ -1,4 +1,5 @@
 """The model swap function as well as the function for initial guesses."""
+import numpy as np
 
 def model_swap(params, args, x):
     """
@@ -30,7 +31,7 @@ def initial_guess(args):
     name = args['name'] #name of the model
     if name == "sflinear_combinations":
         #Try the kept values of the model defaults
-        #Premade at the args step
+        #Premade elsewhere
         return args['defaults'][args['kept']]
     if "single_snapshot" in name:
         if "all" in name:

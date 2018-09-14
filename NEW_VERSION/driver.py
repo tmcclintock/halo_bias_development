@@ -1,13 +1,15 @@
 """This contains routines to find the best fit and run the MCMC."""
 
+import os, pickle
 import numpy as np
+import scipy.optimize as op
 from likelihoods import *
 import swaps
 
-def get_args(i):
-    if os.path.isfile("./args/args_box%d.p"%i):
-        args = pickle.load(open("./args/args_box%d.p"%i, 'rb'))
-        print "Using saved args for box%d"%i
+def get_args(i, bname):
+    if os.path.isfile("./args/args_%s%d.p"%(bname, i)):
+        args = pickle.load(open("./args/args_%s%d.p"%(bname, i), 'rb'))
+        print "Using saved args for %s%d"%(bname, i)
         return args
     else:
         raise Exception("Must have args premade.")
@@ -22,7 +24,7 @@ def run_bf(args, bf_array, bf_path):
     print result
     bf_array[box] = result['x']
     np.save(bf_path, bf_array)
-    return
+    return bf_array
 
 def run_mcmc(args, bf_array, mcmc_path, likes_path):
     box = args['box']
