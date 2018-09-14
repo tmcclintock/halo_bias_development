@@ -12,19 +12,14 @@ def smooth_model(params, snapshot, args):
     return bias._bias_at_nu_FREEPARAMS(nu, a1, a2, b1, b2, c1, c2)
 
 def model_at_snapshot(params, snapshot, args):
-    x      = args['x_arr'][snapshot] #scale factor - 0.5
     lMarr  = args['lM_arr'] #ln mass array, Msun/h
-    nu     = args['nu_arr'][snapshot] #pre-computed peak height
     dndlnM = args['dndlnM_arr'][snapshot] #mass function
     lMbins = args['lMbins'][snapshot] #edges of mass bins
     nbin   = args['nbins'][snapshot] #integral of the mass function in the bin, aka the denominator
     Nbins = len(lMbins)
 
-    #Get the bias parameters
-    a1,a2,b1,b2,c1,c2 = swaps.model_swap(params, args, x)
-
     #mass functon weighted bias
-    b_n = dndlnM * bias._bias_at_nu_FREEPARAMS(nu, a1, a2, b1, b2, c1, c2)
+    b_n = dndlnM * smooth_model(params, snapshot, args)
     b_n_spl = IUS(lMarr, b_n)
 
     #bin-integrated bias

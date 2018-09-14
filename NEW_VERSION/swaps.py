@@ -1,6 +1,14 @@
 """The model swap function as well as the function for initial guesses."""
 import numpy as np
 
+#Tinker defaults
+y = np.log10(200)
+a1,a2 = 1+.24*y*np.exp(-(4/y)**4), 0.44*y-0.88
+b1,b2 = 0.183, 1.5
+c1 = 0.019+0.107*y+0.19*np.exp(-(4/y)**4)
+c2 = 2.4
+tds = np.array([a1,a2,b1,b2,c1,c2])
+
 def model_swap(params, args, x):
     """
     Used to swap between different halo bias models.
@@ -19,10 +27,36 @@ def model_swap(params, args, x):
         pars[args['dropped']] = args['defaults'][args['dropped']]
         a1,a2,b1,b2,c1,c2 = pars[:6] + x*pars[6:]
     elif "single_snapshot" in name:
+        out = None
         if "all" in name:
-            a1,a2,b1,b2,c1,c2 = params
-        else:
+            out = params
+        elif "m1" in name:
+            a1 = tds[0]
+            a2,b1,b2,c1,c2 = params
+            out = np.array([a1,a2,b1,b2,c1,c2])
+        elif "m2" in name:
+            a1 = tds[0]
+            b1 = tds[2]
+            a2,b2,c1,c2 = params
+            out = np.array([a1,a2,b1,b2,c1,c2])
+        elif "m3" in name:
+            a1,a2,b1 = tds[:3]
+            b2,c1,c2 = params
+            out = np.array([a1,a2,b1,b2,c1,c2])
+        elif "m4" in name:
+            a1,a2,b1,b2 = tds[:4]
+            c1,c2 = params
+            out = np.array([a1,a2,b1,b2,c1,c2])
+        elif "m5" in name: #crap
+            a1 = tds[0]
+            b1,b2 = tds[2:4]
+            c2 = tds[5]
+            a2, c1 = params
+            out = np.array([a1,a2,b1,b2,c1,c2])
+        if out is None:
             raise Exception("Single snapshot model swap not implemented.")
+        else:
+            return out
     else:
         raise Exception("Model swap not implemented.")
     return a1, a2, b1, b2, c1, c2
@@ -33,12 +67,25 @@ def initial_guess(args):
         #Try the kept values of the model defaults
         #Premade elsewhere
         return args['defaults'][args['kept']]
-    if "single_snapshot" in name:
+    elif "single_snapshot" in name:
+        out = None
         if "all" in name:
-            #Try the Tinker defaults
-            y = np.log10(200)
-            a1,a2 = 1+.24*y*np.exp(-(4/y)**4), 0.44*y-0.88
-            b1,b2 = 0.183, 1.5
-            c1 = 0.019+0.107*y+0.19*np.exp(-(4/y)**4)
-            c2 = 2.4
-            return np.array([a1, a2, b1, b2, c1, c2])
+            out = tds
+        elif "m1" in name:
+            out = tds[1:]
+        elif "m2" in name:
+            out = np.delete(tds, [0,2])
+        elif "m3" in name:
+            out = np.delete(tds, [0,1,2])
+        elif "m4" in name:
+            out = np.delete(tds, [0,1,2,3])
+        elif "m5" in name:
+            out = np.delete(tds, [0,2,3,5])
+
+        if out is None:
+            raise Exception("Single snap model initial guess not implemented.")
+        else:
+            return out
+            
+    else:
+        raise Exception("Model initial guess not implemented.")
