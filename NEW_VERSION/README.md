@@ -1,0 +1,1 @@
+This is a cleaner version of the building script one level up. It is much more amenable to being extended and used for other simulations, as well as for plotting and small changes.
