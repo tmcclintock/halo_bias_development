@@ -47,12 +47,17 @@ def model_swap(params, args, x):
             a1,a2,b1,b2 = tds[:4]
             c1,c2 = params
             out = np.array([a1,a2,b1,b2,c1,c2])
-        elif "m5" in name: #crap
+        elif "m5" in name:
             a1 = tds[0]
-            b1,b2 = tds[2:4]
-            c2 = tds[5]
-            a2, c1 = params
+            b2 = tds[3]
+            a2,b1,c1,c2 = params
             out = np.array([a1,a2,b1,b2,c1,c2])
+        elif "m6" in name:
+            a1 = tds[0]
+            c1 = tds[4]
+            a2,b1,b2,c2 = params
+            out = np.array([a1,a2,b1,b2,c1,c2])
+
         if out is None:
             raise Exception("Single snapshot model swap not implemented.")
         else:
@@ -80,8 +85,9 @@ def initial_guess(args):
         elif "m4" in name:
             out = np.delete(tds, [0,1,2,3])
         elif "m5" in name:
-            out = np.delete(tds, [0,2,3,5])
-
+            out = np.delete(tds, [0,3])
+        elif "m6" in name:
+            out = np.delete(tds, [0,4])
         if out is None:
             raise Exception("Single snap model initial guess not implemented.")
         else:

@@ -19,8 +19,8 @@ box = 0
 
 
 fig, ax = plt.subplots(ncols=1, nrows=2, sharex=True)
-model_name = "single_snapshot_m5"
-npars = 2
+model_name = "single_snapshot_m6"
+npars = 4
 bfsnaps = np.zeros((10, npars))
 
 for snapshot in range(10):
